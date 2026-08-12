@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { MessageCircle, UserCircle2, Loader2, AlertCircle, Send, ImagePlus, X, Pin } from 'lucide-react';
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { supabase, isSupabaseConfigured } from '../supabase';
+import { supabase } from '../supabase';
 
 const getSupabaseErrorMessage = (error) => {
     if (!error) return 'Something went wrong. Please try again.';
@@ -256,9 +256,7 @@ const Komentar = () => {
     }, []);
 
     const fetchComments = useCallback(async () => {
-        if (!isSupabaseConfigured || !supabase) {
-            return;
-        }
+        if (!supabase) return;
 
         const { data, error: fetchError } = await supabase
             .from('portfolio_comments')
@@ -275,9 +273,8 @@ const Komentar = () => {
 
     // Fetch pinned comment
     useEffect(() => {
-        if (!isSupabaseConfigured || !supabase) {
+        if (!supabase) {
             setIsLoading(false);
-            setError('Comments are unavailable until Supabase is configured.');
             return;
         }
 
@@ -305,9 +302,7 @@ const Komentar = () => {
 
     // Fetch regular comments and set up real-time subscription
     useEffect(() => {
-        if (!isSupabaseConfigured || !supabase) {
-            return;
-        }
+        if (!supabase) return;
 
         const loadComments = async () => {
             setIsLoading(true);
@@ -349,7 +344,7 @@ const Komentar = () => {
     }, [fetchComments]);
 
     const uploadImage = useCallback(async (imageFile) => {
-        if (!imageFile || !isSupabaseConfigured || !supabase) return null;
+        if (!imageFile || !supabase) return null;
         
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -371,10 +366,7 @@ const Komentar = () => {
     }, []);
 
     const handleCommentSubmit = useCallback(async ({ newComment, userName, imageFile }) => {
-        if (!isSupabaseConfigured || !supabase) {
-            setError('Comments are unavailable until Supabase is configured.');
-            return;
-        }
+        if (!supabase) return;
 
         setError('');
         setIsSubmitting(true);
