@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { MessageCircle, UserCircle2, Loader2, AlertCircle, Send, ImagePlus, X, Pin } from 'lucide-react';
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { supabase } from '../supabase';
+import { supabase, isSupabaseConfigured, supabaseInitError } from '../supabase';
 
 const getSupabaseErrorMessage = (error) => {
     if (!error) return 'Something went wrong. Please try again.';
@@ -273,8 +273,15 @@ const Komentar = () => {
 
     // Fetch pinned comment
     useEffect(() => {
+        if (!isSupabaseConfigured) {
+            setIsLoading(false);
+            setError('Comments are offline: Supabase was not configured when this site was built. Redeploy after setting VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+            return;
+        }
+
         if (!supabase) {
             setIsLoading(false);
+            setError(supabaseInitError || 'Comments are offline: Supabase client failed to initialize.');
             return;
         }
 
