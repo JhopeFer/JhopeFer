@@ -255,6 +255,23 @@ const Komentar = () => {
         });
     }, []);
 
+    const fetchPinnedComment = useCallback(async () => {
+        if (!supabase) return;
+
+        const { data, error: fetchError } = await supabase
+            .from('portfolio_comments')
+            .select('*')
+            .eq('is_pinned', true)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (fetchError) {
+            throw fetchError;
+        }
+
+        setPinnedComment(data?.[0] || null);
+    }, []);
+
     const fetchComments = useCallback(async () => {
         if (!supabase) return;
 
@@ -271,7 +288,6 @@ const Komentar = () => {
         setComments(data || []);
     }, []);
 
-    // Fetch pinned comment
     useEffect(() => {
         if (!isSupabaseConfigured) {
             setIsLoading(false);
@@ -285,47 +301,22 @@ const Komentar = () => {
             return;
         }
 
-        const fetchPinnedComment = async () => {
-            try {
-                const { data, error: fetchError } = await supabase
-                    .from('portfolio_comments')
-                    .select('*')
-                    .eq('is_pinned', true)
-                    .maybeSingle();
-
-                if (fetchError) {
-                    throw fetchError;
-                }
-
-                setPinnedComment(data || null);
-            } catch (fetchError) {
-                setError(getSupabaseErrorMessage(fetchError));
-                console.error('Error fetching pinned comment:', fetchError);
-            }
-        };
-
-        fetchPinnedComment();
-    }, []);
-
-    // Fetch regular comments and set up real-time subscription
-    useEffect(() => {
-        if (!supabase) return;
-
-        const loadComments = async () => {
+        const loadAllComments = async () => {
             setIsLoading(true);
 
             try {
-                await fetchComments();
+                await Promise.all([fetchComments(), fetchPinnedComment()]);
                 setError('');
             } catch (fetchError) {
                 setError(getSupabaseErrorMessage(fetchError));
                 console.error('Error fetching comments:', fetchError);
             } finally {
                 setIsLoading(false);
+                requestAnimationFrame(() => AOS.refresh());
             }
         };
 
-        loadComments();
+        loadAllComments();
 
         const subscription = supabase
             .channel('portfolio_comments')
@@ -334,13 +325,14 @@ const Komentar = () => {
                     event: '*',
                     schema: 'public',
                     table: 'portfolio_comments',
-                    filter: 'is_pinned=eq.false'
                 },
                 () => {
-                    fetchComments().catch((fetchError) => {
-                        setError(getSupabaseErrorMessage(fetchError));
-                        console.error('Error refreshing comments:', fetchError);
-                    });
+                    Promise.all([fetchComments(), fetchPinnedComment()])
+                        .then(() => requestAnimationFrame(() => AOS.refresh()))
+                        .catch((fetchError) => {
+                            setError(getSupabaseErrorMessage(fetchError));
+                            console.error('Error refreshing comments:', fetchError);
+                        });
                 }
             )
             .subscribe();
@@ -348,7 +340,7 @@ const Komentar = () => {
         return () => {
             subscription.unsubscribe();
         };
-    }, [fetchComments]);
+    }, [fetchComments, fetchPinnedComment]);
 
     const uploadImage = useCallback(async (imageFile) => {
         if (!imageFile || !supabase) return null;
@@ -398,13 +390,15 @@ const Komentar = () => {
             }
 
             await fetchComments();
+            await fetchPinnedComment();
+            requestAnimationFrame(() => AOS.refresh());
         } catch (submitError) {
             setError(getSupabaseErrorMessage(submitError));
             console.error('Error adding comment: ', submitError);
         } finally {
             setIsSubmitting(false);
         }
-    }, [uploadImage, fetchComments]);
+    }, [uploadImage, fetchComments, fetchPinnedComment]);
 
     const formatDate = useCallback((timestamp) => {
         if (!timestamp) return '';
@@ -462,7 +456,7 @@ const Komentar = () => {
                         <>
                     {/* Pinned Comment */}
                     {pinnedComment && (
-                        <div data-aos="fade-down" data-aos-duration="800">
+                        <div>
                             <Comment 
                                 comment={pinnedComment} 
                                 formatDate={formatDate}

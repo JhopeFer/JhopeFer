@@ -51,6 +51,13 @@ export default function Comments() {
   }, [filter, search]);
 
   const pin = async (id, value) => {
+    if (value) {
+      await supabase
+        .from("portfolio_comments")
+        .update({ is_pinned: false })
+        .eq("is_pinned", true);
+    }
+
     await supabase
       .from("portfolio_comments")
       .update({ is_pinned: value })
