@@ -229,7 +229,7 @@ const ProjectDetails = () => {
             <div className="grid lg:grid-cols-2 gap-8 md:gap-16">
               <div className="space-y-6 md:space-y-10 animate-slideInLeft">
                 <div className="space-y-4 md:space-y-6">
-                  <h1 className="text-3xl md:text-6xl font-bold bg-gradient-to-r from-red-200 via-red-100 to-red-200 bg-clip-text text-transparent leading-tight"></h1>
+                  <h1 className="text-3xl md:text-6xl font-bold bg-gradient-to-r from-red-200 via-red-100 to-red-200 bg-clip-text text-transparent leading-tight">
                     {project.Title}
                   </h1>
                   <div className="relative h-1 w-16 md:w-24">
