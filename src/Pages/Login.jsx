@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from "../supabase";
+import { supabase, isSupabaseConfigured } from "../supabase";
 import { useNavigate } from 'react-router-dom'
 import { Mail, Lock, LogIn, Sparkles, Eye, EyeOff } from 'lucide-react'
 
@@ -12,6 +12,10 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    if (!isSupabaseConfigured || !supabase) {
+      alert('Admin login is unavailable. Supabase environment variables are not configured.')
+      return
+    }
     setLoading(true)
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { alert(error.message); setLoading(false); return }

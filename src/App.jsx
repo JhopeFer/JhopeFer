@@ -9,9 +9,9 @@ import AnimatedBackground from "./components/Background";
 import { AnimatePresence } from "framer-motion";
 import Footer from "./components/Footer";
 
-import Login from "./Pages/Login";
-import Dashboard from "./Pages/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
+const Login = lazy(() => import("./Pages/Login"));
+const Dashboard = lazy(() => import("./Pages/Dashboard"));
+const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 
 const Portofolio = lazy(() => import("./Pages/Portofolio"));
 const ContactPage = lazy(() => import("./Pages/Contact"));
@@ -81,15 +81,24 @@ function App() {
           <Route path="/project/:slug" element={<ProjectPageLayout />} />
 
           {/* AUTH */}
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <Login />
+              </Suspense>
+            }
+          />
 
           {/* ADMIN (PROTECTED) */}
           <Route
             path="/dashboard/*"
             element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              </Suspense>
             }
           />
 

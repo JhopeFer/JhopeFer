@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 
-import { supabase } from "../supabase"; 
+import { supabase, isSupabaseConfigured } from "../supabase"; 
 
 import PropTypes from "prop-types";
 import AppBar from "@mui/material/AppBar";
@@ -133,6 +133,10 @@ export default function FullWidthTabs() {
 
 
   const fetchData = useCallback(async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      return
+    }
+
     try {
       // Mengambil data dari Supabase secara paralel
       const [projectsResponse, certificatesResponse] = await Promise.all([
